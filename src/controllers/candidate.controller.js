@@ -1,24 +1,9 @@
 import { Candidate } from "../models/candidate.model.js";
-import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const checkIfAdmin = async (userId) => {
-  const user = await User.findById(userId);
-  if (user.role == "admin") {
-    return true;
-  }
-  return false;
-};
-
 const addCandidate = asyncHandler(async (req, res) => {
-  if (!(await checkIfAdmin(req.user._id))) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, {}, "user does not have access"));
-  }
-
   const { name, party, age } = req.body;
 
   if ([name, party].some((field) => field?.trim() === " ") || isNaN(age)) {
@@ -54,9 +39,7 @@ const getCandidateById = asyncHandler(async (req, res) => {
 
 const updateCandidate = asyncHandler(async (req, res) => {
   const { name, age, party } = req.body;
-  //   if (!name || !age || !party) {
-  //     throw new ApiError(400, "update details required");
-  //   }
+
   if (
     !(
       !isNaN(age) ||
@@ -88,9 +71,6 @@ const updateCandidate = asyncHandler(async (req, res) => {
 });
 
 const deleteCandidate = asyncHandler(async (req, res) => {
-  if (!(await checkIfAdmin(req.user._id))) {
-    return res.staus(400, "does not has acess to delete");
-  }
   const { candidateId } = req.params;
   const response = await Candidate.findByIdAndDelete(candidateId);
   if (!response) {
@@ -99,4 +79,23 @@ const deleteCandidate = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, "Delted Successfully"));
 });
 
-export { addCandidate, getCandidateById, updateCandidate, deleteCandidate };
+const getAllCandidates = asyncHandler(async (req, res) => {
+  const candidates = await Candidate.find({}, "-_id").sort({ name: 1 });
+  if (!candidates) {
+    throw new ApiError(400, "can't fetch the candidate details try again");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, candidates, "all candidates fetched successfully")
+    );
+});
+
+export {
+  addCandidate,
+  getCandidateById,
+  updateCandidate,
+  deleteCandidate,
+  getAllCandidates,
+};

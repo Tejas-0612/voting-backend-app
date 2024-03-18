@@ -1,3 +1,4 @@
+import { Candidate } from "../models/candidate.model.js";
 import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
@@ -187,4 +188,45 @@ const changeUserPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "password changed sucessfully"));
 });
 
-export { registerUser, loginUser, logoutUser, getprofile, changeUserPassword };
+const voteCandidate = asyncHandler(async (req, res) => {
+  const { candidateId } = req.params;
+  const userId = req.user._id;
+
+  const candidate = await Candidate.findById(candidateId);
+  if (!candidate) {
+    throw new ApiError(404, "Candidate not found");
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (user.role == "admin") {
+    throw new ApiError("You are not allowed to vote");
+  }
+
+  if (user.isVoted) {
+    throw new ApiError(400, "User already voted");
+  }
+
+  candidate.votes.push({ user: userId });
+  await candidate.save();
+
+  user.isVoted = true;
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Vote recorded Successfully"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getprofile,
+  changeUserPassword,
+  voteCandidate,
+};
