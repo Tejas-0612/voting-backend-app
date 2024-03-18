@@ -12,7 +12,7 @@ const router = Router();
 
 router.route("/sign-up").post(registerUser);
 router.route("/sign-in").post(loginUser);
+router.route("/sign-out").post(verifyJWT, logoutUser);
 router.route("/profile").get(verifyJWT, getprofile);
 router.route("/profile/password").post(verifyJWT, changeUserPassword);
-router.route("/sign-out").post(verifyJWT, logoutUser);
 export default router;

@@ -9,6 +9,7 @@ const candidateSchema = new Schema(
     party: {
       type: String,
       required: true,
+      unique: true,
     },
     age: {
       type: Number,
@@ -31,4 +32,4 @@ const candidateSchema = new Schema(
   { timestamps: true }
 );
 
-export const Candidate = new model("Candidate", candidateSchema);
+export const Candidate = mongoose.model("Candidate", candidateSchema);
